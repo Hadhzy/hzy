@@ -1,14 +1,15 @@
 import select
-import dataclasses
+from typing import TYPE_CHECKING
 import snegg.ei as ei
-from typing import Any
-__all__ = ["Event", "ConfigEvents"]
 
-@dataclasses.dataclass
-class ConfigEvents:
-    INTERESTED_IN: Any = "all"
-    GET_THERE: callable = None
-    CTX: ei.Receiver | ei.Sender = ei.Receiver
+if TYPE_CHECKING:
+    from utils import ConfigEvents, ConfigRequest
+    from typing import Type
+
+# This project
+from hzy.request import handle_request
+
+ei.libei
 class Event:
     """
     Handles events
@@ -22,11 +23,18 @@ class Event:
         - None
     """
 
-    def __init__(self, config: ConfigEvents) -> None:
+    def __init__(self, config: Type[ConfigEvents] | Type[ConfigRequest]) -> None:
 
-        self.interested_in = config.INTERESTED_IN
-        self.ctx = config. CTX
-        self.get_there = config.GET_THERE
+        self.config = config
+
+        self.ctx = self.config.CTX
+
+        if self.ctx is ei.Sender:
+
+            self.config.GET_THERE = handle_request
+
+        self.get_there = self.config.GET_THERE
+        self.interested_in = self.config.INTERESTED_IN
 
         self._start_loop()
 

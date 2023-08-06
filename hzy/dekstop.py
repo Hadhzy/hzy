@@ -1,16 +1,12 @@
-from utils import *
+import utils as utils
 import snegg.ei as ei
-import dataclasses
-from typing import Type
+from typing import Type, Any
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
+# This project
+from event import Event
 
-@dataclasses.dataclass
-class CONFIG:
-    """
-    Represents basic configuration for the desktop
-    """
-    SOCKET_NAME: str = None
-    SOCKET_PATH: str = None
+CONFIG_TYPES = utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG # represents the types of the config
+default_configs = [utils.CONFIG, utils.ConfigEvents, utils.ConfigRequest] # default configs to use
 
 class Desktop:
     """
@@ -19,25 +15,46 @@ class Desktop:
         - use_portal:bool - Whether to use the portal or not
         - cls:ei.Receiver | ei.Sender -  The class to use(Receiver or Sender) -> for the first time
         - config:CONFIG - The configuration to use
+
     ### Returns
         - None
 
     """
 
-    def __init__(self, use_portal: bool = True, cls:_type_cls = ei.Receiver, config: CONFIG = None):
+    def __init__(self, use_portal: bool = True, cls:_type_cls = ei.Receiver, config: list[CONFIG_TYPES] | Any = None):
         self.cls = cls # sender or receiver
-        self.ctx = self._use_portal(use_portal, cls, config)
+
+
+        _config, config_events, config_request =  utils.select_config_files(config,
+                                                  default_configs)
+
+        if isinstance(self.cls, ei.Receiver):
+            self.event = Event(config_events)
+
+        elif isinstance(self.cls, ei.Sender):
+            self.request = Event(config_request)
+
+        else:
+            raise TypeError("cls must be a Sender or Receiver, currently it is ", self.cls)
+
+        self.ctx = self._use_portal(use_portal, cls, _config)
 
     #noinspection PyMethodMayBeStatic
-    def _use_portal(self, use_portal, cls, config):
+    def _use_portal(self, use_portal, cls, config: Any):
         """
         Use the portal
-        :param use_portal:
-        :return:
+        ### Arguments
+            - use_portal:bool - Whether to use the portal or not
+            - cls:ei.Receiver | ei.Sender -  The class to use(Receiver or Sender) -> for the first time
+            - config:CONFIG - The configuration to use
+
+        ### Returns
+            - "EIS"
+
         """
 
         if use_portal:
-            portal = wait_for_portal()
+            portal = utils.wait_for_portal()
 
             assert portal is not None
 
@@ -45,18 +62,19 @@ class Desktop:
 
         return cls.create_for_socket(path=config.SOCKET_PATH, name=config.SOCKET_NAME)
 
-    def _setup(self, use_portal: bool = True):
-        pass
-
     @classmethod
     def send(cls, *args, **kwargs):
         """
         Send a request to the server
-        :return:
+        ### Arguments
+
+        ### Returns
+
         """
+
         use_portal = kwargs.get("use_portal", True) or args[0]
         _cls = kwargs.get("cls", ei.Sender) or args[1]
-        _config = kwargs.get("config", None) or args[2]
+        _config = kwargs.get("config", default_configs) or args[2]
 
         return cls(use_portal=use_portal, cls=_cls, config=_config)
 
@@ -64,11 +82,14 @@ class Desktop:
     def receive(cls, *args, **kwargs):
         """
         Receive a request from the server
-        :return:
+        ### Arguments
+
+        ### Returns
+
         """
 
         use_portal = kwargs.get("use_portal", True) or args[0]
         _cls = kwargs.get("cls", ei.Receiver) or args[1]
-        _config = kwargs.get("config", None) or args[2]
+        _config = kwargs.get("config", default_configs) or args[2]
 
         return cls(use_portal=use_portal, cls=_cls, config=_config)
