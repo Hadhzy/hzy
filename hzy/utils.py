@@ -1,7 +1,51 @@
 import select
 import dataclasses
-from typing import Any
+from typing import Any, Callable, TYPE_CHECKING
 import snegg.ei as ei
+from functools import wraps
+
+if TYPE_CHECKING:
+    from queue import Queue
+    event_type = ei.EventType
+
+stored = []
+
+def adder(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        stored.append(StoredType(func, list(args), list(kwargs)))
+
+    return wrapper
+
+class StoredType:
+    def __init__(self, func, args, kwargs):
+        self.func = func
+        self.args = args[1:]
+        self.kwargs = kwargs[1:]
+        self.instance = args[0]
+
+    def __str__(self):
+        return f"{self.func.__name__}({self.args}{self.kwargs})"
+
+def execute_them(item):
+    func = item.func
+    args = item.args
+    kwargs = item.kwargs
+    instance = item.instance
+
+    if args:
+        if kwargs:
+            func(instance, *args, **kwargs)
+        else:
+            func(instance, *args)
+
+    if kwargs:
+        if args:
+            func(instance, *args, **kwargs)
+        else:
+            func(instance, **kwargs)
+
 
 
 @dataclasses.dataclass
@@ -10,7 +54,7 @@ class ConfigEvents:
     Configure Events(receiver)
     """
     INTERESTED_IN: Any = "all"
-    GET_THERE: callable = None
+    GET_THERE: Callable[[event_type, Queue], None] = None
     CTX: ei.Receiver | ei.Sender = ei.Receiver
 
 @dataclasses.dataclass

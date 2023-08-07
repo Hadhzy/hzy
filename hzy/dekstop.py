@@ -4,7 +4,7 @@ from typing import Type, Any
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
 # This project
 from event import Event
-
+from request import Interactions
 CONFIG_TYPES = utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG # represents the types of the config
 default_configs = [utils.CONFIG, utils.ConfigEvents, utils.ConfigRequest] # default configs to use
 
@@ -22,22 +22,23 @@ class Desktop:
     """
 
     def __init__(self, use_portal: bool = True, cls:_type_cls = ei.Receiver, config: list[CONFIG_TYPES] | Any = None):
-        self.cls = cls # sender or receiver
+        self._cls = cls # sender or receiver
 
+        self.interact = Interactions() # the interactions object
 
         _config, config_events, config_request =  utils.select_config_files(config,
                                                   default_configs)
 
-        if isinstance(self.cls, ei.Receiver):
+        if isinstance(self._cls, ei.Receiver):
             self.event = Event(config_events)
 
-        elif isinstance(self.cls, ei.Sender):
+        elif isinstance(self._cls, ei.Sender):
             self.request = Event(config_request)
 
         else:
-            raise TypeError("cls must be a Sender or Receiver, currently it is ", self.cls)
+            raise TypeError("cls must be a Sender or Receiver, currently it is ", self._cls)
 
-        self.ctx = self._use_portal(use_portal, cls, _config)
+        self._ctx = self._use_portal(use_portal, cls, _config)
 
     #noinspection PyMethodMayBeStatic
     def _use_portal(self, use_portal, cls, config: Any):

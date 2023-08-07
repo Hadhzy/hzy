@@ -1,7 +1,7 @@
 import select
 from typing import TYPE_CHECKING
 import snegg.ei as ei
-
+from queue import Queue
 if TYPE_CHECKING:
     from utils import ConfigEvents, ConfigRequest
     from typing import Type
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 # This project
 from hzy.request import handle_request
 
-ei.libei
+
 class Event:
     """
     Handles events
@@ -28,6 +28,8 @@ class Event:
         self.config = config
 
         self.ctx = self.config.CTX
+
+        self.device_ready = Queue()
 
         if self.ctx is ei.Sender:
 
@@ -49,9 +51,15 @@ class Event:
             for e in self.ctx.events:
 
                 if self.interested_in == "all":
-                    self.get_there(e)
+
+                    result = self.get_there(e, self.device_ready)
 
                 if self.interested_in is not "all" and type(self.interested_in) is list:
 
                     if e.event_type in self.interested_in:
-                        self.get_there(e)
+
+                        result = self.get_there(e, self.device_ready)
+
+                if self.device_ready.get() == "device added":
+                    # execute the tasks pass in devices
+                    pass
