@@ -8,3 +8,14 @@ requires = [
 
 
 build-backend = "setuptools.build_meta"
+
+[tool.cibuildwheel]
+test-requires = "pytest"
+test-command = "pytest {project}/tests"
+
+[tool.cibuildwheel.linux]
+before-all = [
+    "yum install -y libei",
+    "yum install -y libeis",
+    "yum install -y liboeffis"
+]

@@ -101,13 +101,15 @@ class Desktop:
         """
         Receive a request from the server
         ### Arguments
-
+            - use_portal:bool - Whether to use the portal or not
+            - cls:ei.Receiver | ei.Sender -  The class to use(Receiver or Sender) -> for the first time
+            - config:CONFIG - The configuration to use
         ### Returns
 
         """
 
         use_portal = kwargs.get("use_portal", True) or args[0]
         _cls = kwargs.get("cls", ei.Receiver) or args[1]
-        _config = kwargs.get("config", default_configs) or args[2]
+        _config = kwargs.get("config", default_configs or args[2])
 
         return cls(use_portal=use_portal, cls=_cls, config=_config)

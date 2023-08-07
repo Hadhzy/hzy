@@ -68,3 +68,6 @@ class Event:
 
                     for _item in STORED:
                         execute_them(_item, pointer, abs, keyboard, touch)
+
+                    # Finished executing the tasks
+                    break
