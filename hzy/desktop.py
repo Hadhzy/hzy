@@ -1,12 +1,21 @@
 import utils as utils
 import snegg.ei as ei
 from typing import Type, Any
+
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
 # This project
 from event import Event
 from request import Interactions
-CONFIG_TYPES = utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG # represents the types of the config
-default_configs = [utils.CONFIG, utils.ConfigEvents, utils.ConfigRequest] # default configs to use
+
+CONFIG_TYPES = (
+    utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG
+)  # represents the types of the config
+default_configs = [
+    utils.CONFIG,
+    utils.ConfigEvents,
+    utils.ConfigRequest,
+]  # default configs to use
+
 
 class Desktop:
     """
@@ -21,13 +30,19 @@ class Desktop:
 
     """
 
-    def __init__(self, use_portal: bool = True, cls:_type_cls = ei.Receiver, config: list[CONFIG_TYPES] | Any = None):
-        self._cls = cls # sender or receiver
+    def __init__(
+        self,
+        use_portal: bool = True,
+        cls: _type_cls = ei.Receiver,
+        config: list[CONFIG_TYPES] | Any = None,
+    ):
+        self._cls = cls  # sender or receiver
 
-        self.interact = Interactions() # the interactions object
+        self.interact = Interactions()  # the interactions object
 
-        _config, config_events, config_request =  utils.select_config_files(config,
-                                                  default_configs)
+        _config, config_events, config_request = utils.select_config_files(
+            config, default_configs
+        )
 
         if isinstance(self._cls, ei.Receiver):
             self.event = Event(config_events)
@@ -36,11 +51,13 @@ class Desktop:
             self.request = Event(config_request)
 
         else:
-            raise TypeError("cls must be a Sender or Receiver, currently it is ", self._cls)
+            raise TypeError(
+                "cls must be a Sender or Receiver, currently it is ", self._cls
+            )
 
         self._ctx = self._use_portal(use_portal, cls, _config)
 
-    #noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStatic
     def _use_portal(self, use_portal, cls, config: Any):
         """
         Use the portal

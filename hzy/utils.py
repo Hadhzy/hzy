@@ -6,19 +6,26 @@ from functools import wraps
 
 if TYPE_CHECKING:
     from queue import Queue
+
     event_type = ei.EventType
 
-stored = []
 
-def adder(func):
+def adder(data_path: list):
+    """ """
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        stored.append(StoredType(func, list(args), list(kwargs)))
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            data_path.append(StoredType(func, list(args), list(kwargs)))
 
-    return wrapper
+        return wrapper
+
+    return decorator
+
 
 class StoredType:
+    """ """
+
     def __init__(self, func, args, kwargs):
         self.func = func
         self.args = args[1:]
@@ -28,11 +35,15 @@ class StoredType:
     def __str__(self):
         return f"{self.func.__name__}({self.args}{self.kwargs})"
 
-def execute_them(item):
+
+def execute_them(item, pointer, abs, keyboard, touchscreen):
+    """ """
     func = item.func
     args = item.args
     kwargs = item.kwargs
     instance = item.instance
+
+    instance.add_devices(pointer, abs, keyboard, touchscreen)  # add devices
 
     if args:
         if kwargs:
@@ -47,21 +58,23 @@ def execute_them(item):
             func(instance, **kwargs)
 
 
-
 @dataclasses.dataclass
 class ConfigEvents:
     """
     Configure Events(receiver)
     """
+
     INTERESTED_IN: Any = "all"
     GET_THERE: Callable[[event_type, Queue], None] = None
     CTX: ei.Receiver | ei.Sender = ei.Receiver
+
 
 @dataclasses.dataclass
 class CONFIG:
     """
     Represents basic configuration for the desktop
     """
+
     SOCKET_NAME: str = None
     SOCKET_PATH: str = None
 
@@ -71,8 +84,10 @@ class ConfigRequest(ConfigEvents):
     """
     Configure requests(sender)
     """
+
     INTERESTED_IN = ["request"]
     CTX: ei.Receiver | ei.Sender = ei.Sender
+
 
 def wait_for_portal():
     import snegg.oeffis
@@ -110,12 +125,11 @@ def select_config_files(config: list, default_configs):
     configs = []
     _count = 0
     for conf in config:
-
         if conf is isinstance(conf, (CONFIG, ConfigEvents, ConfigRequest)):
             configs.append(conf)
 
         else:
-             configs.append(default_configs[_count])
+            configs.append(default_configs[_count])
 
         _count += 1
 
