@@ -1,5 +1,9 @@
 from hzy import *
 
+"""
+Receive every event and invoke execute_me when an event occurs
+"""
+
 def execute_me(event):
     print("Hello World!")
 

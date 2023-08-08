@@ -1,5 +1,8 @@
 from hzy import *
 
+"""
+Send a button down event to the desktop with basic config
+"""
 
 desktop = Desktop.send()
 

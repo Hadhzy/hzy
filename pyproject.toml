@@ -10,15 +10,22 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.cibuildwheel]
+
+build = ["cp38-*", "cp39-*", "cp310-*", "cp311-*"]
+skip = "*musllinux*{i686,aarch64}*"
+manylinux-x86_64-image = "manylinux2014"
+manylinux-i686-image = "manylinux2014"
+
 test-requires = "pytest"
 test-command = "pytest {project}/tests"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "yum install -y libei",
-    "yum install -y libeis",
-    "yum install -y liboeffis",
-    "if ! yum install -y libei; then echo 'libeis not avaiable(yet)'; fi",
-    "if ! yum install -y libeis; then echo 'libeis not avaiable(yet)'; fi",
-    "if ! yum install -y liboeffis; then echo 'libeis not avaiable(yet)'; fi",
+    "git clone https://gitlab.freedesktop.org/libinput/libei.git",
+    "cd libei",
+    "apt install git gcc g++ pkg-config libsystemd-dev libxkbcommon-dev libxml2 doxygen python3-attr python3-pytest python3-dbusmock python3-jinja2 python3-pip python3-yaml",
+    "pip install Jinja2",
+    "meson --prefix=/usr builddir/",
+    "ninja -C builddir/",
+    " sudo ninja -C builddir/ install"
 ]
