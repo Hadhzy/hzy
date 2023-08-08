@@ -30,7 +30,7 @@ ENV VIRTUAL_ENV=/venv \
     CC=gcc \
     CXX=g++
 
-RUN python3.9 -m venv "$VIRTUAL_ENV"
+RUN python3.11 -m venv "$VIRTUAL_ENV"
 
 ENV PATH="${VIRTUAL_ENV}/bin:${PATH}" \
     PYTHON="${VIRTUAL_ENV}/bin/python"
