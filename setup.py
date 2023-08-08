@@ -8,7 +8,7 @@ with open("hzy/_version.py") as fp:
 setup(
     name="hzy",
     version=about["__version__"],
-    python_requires="3.11",
+    python_requires=">=3.11",
     description="Python wrapper around the c libei library",
     long_description="Emulated inputs for wayland in python empowered with CIBW",
     url="https://github.com/Hadhzy/hzy",

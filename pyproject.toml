@@ -17,5 +17,8 @@ test-command = "pytest {project}/tests"
 before-all = [
     "yum install -y libei",
     "yum install -y libeis",
-    "yum install -y liboeffis"
+    "yum install -y liboeffis",
+    "if ! yum install -y libei; then echo 'libeis not avaiable(yet)'; fi",
+    "if ! yum install -y libeis; then echo 'libeis not avaiable(yet)'; fi",
+    "if ! yum install -y liboeffis; then echo 'libeis not avaiable(yet)'; fi",
 ]
