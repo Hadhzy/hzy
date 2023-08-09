@@ -1,6 +1,6 @@
 setuptools
 wheel
-snegg
+snegg @ git+https://gitlab.freedesktop.org/libinput/snegg
 black
 pytest
 cibuildwheel
