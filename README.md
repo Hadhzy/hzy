@@ -9,6 +9,15 @@
 
 - It is mandatory to have [`libei`](https://gitlab.freedesktop.org/libinput/libei) installed on your system. You can find the installation instructions [here](https://gitlab.freedesktop.org/libinput/snegg/-/blob/master/README.md#installation).
 
+- If you are using one of these distros, you should be able to install libei by only using your package manager:
+
+Get Libei: 
+
+- ALT Linux 
+- Arch Linux, 
+- Fedora
+- FreeBSD
+
 > **Note**: **libei needs to be installed**: It can be installed automatically, in the future!
 > 
 > 
