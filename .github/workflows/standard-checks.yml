@@ -22,16 +22,16 @@ jobs:
 
       - name: Check for docstring's
         run: |
-           pylint --limit-inference-results 0 --disable all --enable missing-function-docstring missing-module-docstring missing-class-docstring empty-docstring ./slobypy
+           pylint --limit-inference-results 0 --disable all --enable missing-function-docstring missing-module-docstring missing-class-docstring empty-docstring ./hzy
 
       - name: Run Pylint check
         run: |
-          pylint --fail-under 10 --limit-inference-results 0 ./slobypy
+          pylint --fail-under 10 --limit-inference-results 0 ./hzy
 
       - name: Run MyPy check
         run: |
-          mypy --ignore-missing-imports --follow-imports silent --install-types --non-interactive ./slobypy
+          mypy --ignore-missing-imports --follow-imports silent --install-types --non-interactive ./hzy
 
       - name: Run Black check
         run: |
-          black --check ./slobypy
+          black --check ./hzy
