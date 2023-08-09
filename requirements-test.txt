@@ -4,3 +4,5 @@ snegg
 black
 pytest
 cibuildwheel
+pylint
+mypy
