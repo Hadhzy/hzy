@@ -45,6 +45,7 @@ class Desktop:
             config, default_configs
         )
 
+        # Todo: maybe the wrapper is not needed(fd as a class attribute??)
         if self._cls is ei.Receiver:
             _cf_event = config_events
 
