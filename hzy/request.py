@@ -3,6 +3,7 @@
 import hzy.event as event
 from hzy.utils import adder
 
+
 class Interactions:
     """
     Interactions by the user

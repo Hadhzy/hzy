@@ -40,3 +40,11 @@ class Client:
         """
         self.c_obj.new_seat()
         self.seat_added = True
+
+    def disconnect(self):
+        """
+
+        :return:
+        """
+        self.connection.state = False
+        self.c_obj.disconnect()

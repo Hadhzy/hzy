@@ -103,9 +103,8 @@ class Event:
         poll.register(self.ctx.fd)
 
         result = None
-
-        while poll.poll():
-
+        run = True
+        while poll.poll() and run:
             _ctx = self.ctx(name="test")  # create a new instance
 
             _ctx.dispatch()
@@ -114,7 +113,7 @@ class Event:
                 if self.interested_in == "all":
                     result = self.get_there(e, self.device_ready)
 
-                if self.interested_in is not "all" and type(self.interested_in) is list:
+                if self.interested_in != "all" and type(self.interested_in) == list:
                     if e.event_type in self.interested_in:
                         result = self.get_there(e, self.device_ready)
 
@@ -129,5 +128,5 @@ class Event:
                         execute_them(_item, pointer, abs, keyboard, touch)
 
                     # Finished executing the tasks
+                    run = False
                     break
-            break

@@ -62,7 +62,8 @@ class Desktop:
 
         else:
             raise TypeError(
-               f"cls must be a Sender: {ei.Sender} or Receiver: {ei.Receiver}, currently it is ", self._cls
+                f"cls must be a Sender: {ei.Sender} or Receiver: {ei.Receiver}, currently it is ",
+                self._cls,
             )
 
     # noinspection PyMethodMayBeStatic
