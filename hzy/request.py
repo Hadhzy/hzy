@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 # This project
 from hzy.client import Client
-from hzy.event import STORED
+import hzy.event as event
 from hzy.utils import adder
 
 if TYPE_CHECKING:
@@ -101,7 +101,7 @@ class Interactions:
         self.keyboard = keyboard
         self.touchscreen = touchscreen
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def move_cursor(self, x: int, y: int, abs=True) -> None:
         """
         ### Arguments
@@ -118,7 +118,7 @@ class Interactions:
         else:
             self.pointer.start_emulating().pointer_motion(x, y).stop_emulating()
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def button_down(self, button: int, is_press: bool = True) -> None:
         """
         ### Arguments
@@ -130,7 +130,7 @@ class Interactions:
 
         self.pointer.start_emulating().button_button(button, is_press).stop_emulating()
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def button_up(self, button: int, is_press: bool = False) -> None:
         """
         ### Arguments
@@ -142,7 +142,7 @@ class Interactions:
 
         self.pointer.start_emulating().button_button(button, is_press).stop_emulating()
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def key_down(self, key: int, is_press: bool = True) -> None:
         """
         ### Arguments
@@ -154,7 +154,7 @@ class Interactions:
 
         self.keyboard.start_emulating().keyboard_key(key, is_press).stop_emulating()
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def key_up(self, key: int, is_press: bool = False) -> None:
         """
         ### Arguments
@@ -167,7 +167,7 @@ class Interactions:
 
         self.keyboard.start_emulating().keyboard_key(key, is_press).stop_emulating()
 
-    @adder(data_path=STORED)
+    @adder(data_path=event.STORED)
     def scroll(self, clicks: int = 1) -> None:
         """
         ### Arguments
