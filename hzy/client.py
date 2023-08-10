@@ -25,26 +25,26 @@ class Client:
         self.c_obj = c_obj
         self.seat_added = False
 
-    def connect(self):
+    def connect(self) -> None:
+        """
+        Connects the client
         """
 
-        :return:
-        """
         self.connection.state = True
         self.c_obj.connect()
 
-    def new_seat(self):
+    def new_seat(self) -> None:
+        """
+        New seat
         """
 
-        :return:
-        """
         self.c_obj.new_seat()
         self.seat_added = True
 
-    def disconnect(self):
+    def disconnect(self) -> None:
+        """
+        Disconnects the client
         """
 
-        :return:
-        """
         self.connection.state = False
         self.c_obj.disconnect()

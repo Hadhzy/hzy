@@ -53,9 +53,31 @@ easier to validate it.
 
 Before commiting anything, install the pre-commit hooks:
 
+---
+
+* **Install requirements:**
 ```shell
 python3 -m pip install -r requirements-test.txt
 ```
+* **Install requirements for pre-commit hooks**:
+```shell
+pip install pre-commit
+```
+* **Add pre-commit to Github hooks:**
+```shell
+pre-commit install
+```
+
+* **The Project is based on snegg which is currently not available on PyPi**, 
+**so you may need to install it manually if you want your IDE to recognise the package:**
+
+```shell
+pip install git+https://gitlab.freedesktop.org/libinput/libei.git
+```
+
+`For more information about contribution feel free to check out the discord server` [server](https://discord.gg/Qt89JBB2ES).
+
+---
 
 This will ensure that your contribution passes our linting checks.
 
