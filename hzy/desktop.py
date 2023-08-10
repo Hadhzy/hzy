@@ -1,4 +1,4 @@
-import utils as utils
+import hzy.utils as utils
 import snegg.ei as ei
 from typing import Type, Any
 
