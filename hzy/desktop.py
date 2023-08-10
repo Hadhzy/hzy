@@ -1,7 +1,7 @@
 import hzy.utils as utils
 import snegg.ei as ei
 from typing import Type, Any
-
+import snegg
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
 # This project
 from hzy.event import Event
@@ -44,7 +44,7 @@ class Desktop:
             config, default_configs
         )
 
-        if isinstance(self._cls, ei.Receiver):
+        if isinstance(self._cls, snegg.ei.Receiver):
             self.event = Event(config_events)
 
         elif isinstance(self._cls, ei.Sender):
@@ -52,7 +52,7 @@ class Desktop:
 
         else:
             raise TypeError(
-                "cls must be a Sender or Receiver, currently it is ", self._cls
+               f"cls must be a Sender: {ei.Sender} or Receiver: {ei.Receiver}, currently it is ", self._cls
             )
 
         self._ctx = self._use_portal(use_portal, cls, _config)
