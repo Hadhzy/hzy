@@ -64,7 +64,7 @@ def handle_request(event, read_queue: "Queue"):
         device.resume()
 
         read_queue.put("device added")
-        return pointer, abs, keyboard, touchscreen
+        return pointer, abs, keyboard, touchscreen, client
 
     # execute the tasks
 
@@ -104,6 +104,7 @@ class Event:
 
         result = None
         run = True
+
         while poll.poll() and run:
             _ctx = self.ctx(name="test")  # create a new instance
 
@@ -122,11 +123,12 @@ class Event:
 
                     assert result is not None
 
-                    pointer, abs, keyboard, touch = result
+                    pointer, abs, keyboard, touch, client = result
 
                     for _item in STORED:
                         execute_them(_item, pointer, abs, keyboard, touch)
 
                     # Finished executing the tasks
+                    client.disconnect()  # disconnect the client
                     run = False
                     break
