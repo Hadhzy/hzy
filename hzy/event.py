@@ -4,10 +4,10 @@ from queue import Queue
 import snegg.ei as ei
 from snegg.eis import EventType
 from snegg.ei import EventType as ei_event_type
+from typing import Type
 
 if TYPE_CHECKING:
-    from utils import ConfigEvents, ConfigRequest
-    from typing import Type
+    from hzy.utils import ConfigEvents, ConfigRequest
 
 # This project
 from hzy.utils import execute_them
