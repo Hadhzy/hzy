@@ -4,10 +4,12 @@ from typing import Any, Callable, TYPE_CHECKING
 import snegg.ei as ei
 from functools import wraps
 
+event_type = ei.EventType
+
 if TYPE_CHECKING:
     from queue import Queue
 
-    event_type = ei.EventType
+
 
 
 def adder(data_path: list):
