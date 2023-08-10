@@ -1,17 +1,14 @@
 import select
-from typing import TYPE_CHECKING
 from queue import Queue
 import snegg.ei as ei
 from snegg.eis import EventType
 from snegg.ei import EventType as ei_event_type
 from typing import Type
 
-if TYPE_CHECKING:
-    from hzy.utils import ConfigEvents, ConfigRequest
-
 # This project
 from hzy.utils import execute_them
 from hzy.client import Client
+from hzy.utils import ConfigEvents, ConfigRequest
 
 STORED = []  # tasks to execute
 
