@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from queue import Queue
 
 
-def handle_request(event, read_queue: Queue):
+def handle_request(event, read_queue: "Queue"):
     """
     (source: https://gitlab.freedesktop.org/libinput/snegg/-/blob/main/examples/eis-demo-server.py)
     ### Arguments
