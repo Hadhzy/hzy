@@ -99,8 +99,6 @@ class Event:
         self._start_loop()
 
     def _start_loop(self):
-        print("ctx", self.ctx)
-        print("fd: ", self.ctx.fd)
         poll = select.poll()
         poll.register(self.ctx.fd)
 
@@ -132,3 +130,4 @@ class Event:
 
                     # Finished executing the tasks
                     break
+            break
