@@ -127,4 +127,3 @@ class Event:
 
                     # Finished executing the tasks
                     break
-

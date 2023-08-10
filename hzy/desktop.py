@@ -45,21 +45,19 @@ class Desktop:
             config, default_configs
         )
 
-        self._ctx = self._use_portal(use_portal, cls, _config)
-
         if self._cls is ei.Receiver:
             _cf_event = config_events
 
-            _cf_event.CTX.fd = self._ctx
+            _cf_event.CTX.fd = self._use_portal(use_portal, cls, _config)
 
-            self.event = Event(config_events)
+            self.event = Event(_cf_event)
 
         elif self._cls is ei.Sender:
             _cf_request = config_request
 
-            _cf_request.CTX.fd = self._ctx
+            _cf_request.CTX.fd = self._use_portal(use_portal, cls, _config)
 
-            self.request = Event(config_request)
+            self.request = Event(_cf_request)
 
         else:
             raise TypeError(
