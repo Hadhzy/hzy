@@ -112,7 +112,7 @@ class Event:
 
             _ctx.dispatch()
 
-            for e in self.ctx.events:
+            for e in _ctx.events:
                 if self.interested_in == "all":
                     result = self.get_there(e, self.device_ready)
 
