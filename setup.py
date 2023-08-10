@@ -9,10 +9,10 @@ setup(
     name="hzy",
     version=about["__version__"],
     python_requires=">=3.11",
-    description="Python wrapper around the c libei library",
-    long_description="Emulated inputs for wayland in python empowered with CIBW",
+    description="Emulated input for Wayland in python",
+    long_description="Emulated input for Wayland in python empowered by libei c lib",
     url="https://github.com/Hadhzy/hzy",
     license="Apache 2.0",
-    packages=find_packages(where="hzy"),
+    packages=["hzy"],
     author="Hadhzy Organisation"
 )
