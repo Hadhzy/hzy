@@ -108,7 +108,7 @@ class Event:
 
         while poll.poll():
 
-            _ctx = self.ctx()  # create a new instance
+            _ctx = self.ctx(name="test")  # create a new instance
 
             self.ctx.dispatch()
 
