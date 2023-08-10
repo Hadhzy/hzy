@@ -99,6 +99,7 @@ class Event:
         self._start_loop()
 
     def _start_loop(self):
+        print("fd: ", self.ctx.fd)
         poll = select.poll()
         poll.register(self.ctx.fd)
 
