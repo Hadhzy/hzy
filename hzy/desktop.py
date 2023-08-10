@@ -4,8 +4,8 @@ from typing import Type, Any
 
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
 # This project
-from event import Event
-from request import Interactions
+from hzy.event import Event
+from hzy.request import Interactions
 
 CONFIG_TYPES = (
     utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG
