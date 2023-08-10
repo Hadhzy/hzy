@@ -81,7 +81,7 @@ class Desktop:
 
         if use_portal:
             portal = utils.wait_for_portal()
-
+            print("gone through")
             assert portal is not None
 
             return cls.create_for_fd(portal.eis_fd, name=config.SOCKET_NAME)

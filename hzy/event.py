@@ -124,10 +124,10 @@ class Event:
                     assert result is not None
 
                     pointer, abs, keyboard, touch, client = result
-
+                    print("here")
                     for _item in STORED:
                         execute_them(_item, pointer, abs, keyboard, touch)
-
+                    print("here2")
                     # Finished executing the tasks
                     client.disconnect()  # disconnect the client
                     run = False
