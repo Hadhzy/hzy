@@ -48,14 +48,14 @@ class Desktop:
         if self._cls is ei.Receiver:
             _cf_event = config_events
 
-            _cf_event.CTX.fd = self._use_portal(use_portal, cls, _config)
+            _cf_event.CTX.fd = self._use_portal(use_portal, cls, _config).fd
 
             self.event = Event(_cf_event)
 
         elif self._cls is ei.Sender:
             _cf_request = config_request
 
-            _cf_request.CTX.fd = self._use_portal(use_portal, cls, _config)
+            _cf_request.CTX.fd = self._use_portal(use_portal, cls, _config).fd
 
             self.request = Event(_cf_request)
 
@@ -75,7 +75,6 @@ class Desktop:
 
         ### Returns
             - "EIS"
-
         """
 
         if use_portal:
