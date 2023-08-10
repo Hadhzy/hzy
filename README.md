@@ -1,3 +1,7 @@
+<p align="center">
+<img src="https://raw.githubusercontent.com/Hadhzy/hzy/main/_static/images/logo_buffalo_2.png" alt="" width="70%">
+</p>
+
 
 ![OS Linux](https://img.shields.io/badge/OS-Linux-blue)
 
