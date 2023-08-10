@@ -3,9 +3,10 @@ import dataclasses
 from typing import Any, Callable
 import snegg.ei as ei
 from functools import wraps
+from queue import Queue
 
 event_type = ei.EventType
-from queue import Queue
+
 
 def adder(data_path: list):
     """ """

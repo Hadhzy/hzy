@@ -12,6 +12,7 @@ from hzy.utils import ConfigEvents, ConfigRequest
 
 STORED = []  # tasks to execute
 
+
 def handle_request(event, read_queue: "Queue"):
     """
     (source: https://gitlab.freedesktop.org/libinput/snegg/-/blob/main/examples/eis-demo-server.py)
@@ -66,13 +67,16 @@ def handle_request(event, read_queue: "Queue"):
         return pointer, abs, keyboard, touchscreen
 
     # execute the tasks
+
+
 class Event:
     """
     Handles events
 
     ### Arguments
         - ctx: ei.Receiver | ei.Sender - The context to use
-        - interested_in: list | str - The events to listen to(NOTE: if you want to listen to all events, pass "all", otherwise pass a list of events type)
+        - interested_in: list | str - The events to listen to(NOTE: if you want to listen to all events, pass "all",
+        otherwise pass a list of events type)
         - get_there: callable - The function to call when the event is received
 
     ### Returns
@@ -123,3 +127,4 @@ class Event:
 
                     # Finished executing the tasks
                     break
+

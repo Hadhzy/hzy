@@ -1,10 +1,12 @@
 import hzy.utils as utils
 import snegg.ei as ei
 from typing import Type, Any
-_type_cls = Type[ei.Receiver] | Type[ei.Sender]
+
 # This project
 from hzy.event import Event
 from hzy.request import Interactions
+
+_type_cls = Type[ei.Receiver] | Type[ei.Sender]
 
 CONFIG_TYPES = (
     utils.ConfigEvents | utils.ConfigRequest | utils.CONFIG
@@ -43,18 +45,26 @@ class Desktop:
             config, default_configs
         )
 
+        self._ctx = self._use_portal(use_portal, cls, _config)
+
         if self._cls is ei.Receiver:
+            _cf_event = config_events
+
+            _cf_event.CTX.fd = self._ctx
+
             self.event = Event(config_events)
 
         elif self._cls is ei.Sender:
+            _cf_request = config_request
+
+            _cf_request.CTX.fd = self._ctx
+
             self.request = Event(config_request)
 
         else:
             raise TypeError(
                f"cls must be a Sender: {ei.Sender} or Receiver: {ei.Receiver}, currently it is ", self._cls
             )
-
-        self._ctx = self._use_portal(use_portal, cls, _config)
 
     # noinspection PyMethodMayBeStatic
     def _use_portal(self, use_portal, cls, config: Any):
