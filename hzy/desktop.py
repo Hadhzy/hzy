@@ -1,7 +1,6 @@
 import hzy.utils as utils
 import snegg.ei as ei
 from typing import Type, Any
-import snegg
 _type_cls = Type[ei.Receiver] | Type[ei.Sender]
 # This project
 from hzy.event import Event
@@ -44,10 +43,10 @@ class Desktop:
             config, default_configs
         )
 
-        if isinstance(self._cls, snegg.ei.Receiver):
+        if self._cls is ei.Receiver:
             self.event = Event(config_events)
 
-        elif isinstance(self._cls, ei.Sender):
+        elif self._cls is ei.Sender:
             self.request = Event(config_request)
 
         else:
