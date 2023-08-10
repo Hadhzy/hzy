@@ -1,16 +1,11 @@
 import select
 import dataclasses
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, Callable
 import snegg.ei as ei
 from functools import wraps
 
 event_type = ei.EventType
-
-if TYPE_CHECKING:
-    from queue import Queue
-
-
-
+from queue import Queue
 
 def adder(data_path: list):
     """ """
