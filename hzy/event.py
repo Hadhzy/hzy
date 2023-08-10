@@ -110,7 +110,7 @@ class Event:
 
             _ctx = self.ctx(name="test")  # create a new instance
 
-            self.ctx.dispatch()
+            _ctx.dispatch()
 
             for e in self.ctx.events:
                 if self.interested_in == "all":
