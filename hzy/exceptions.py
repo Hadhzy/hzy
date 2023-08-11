@@ -1,2 +1,0 @@
-class Base(Exception):
-    pass
