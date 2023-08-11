@@ -3,7 +3,6 @@
 requires = [
     "setuptools",
     "wheel",
-    "snegg @ git+https://gitlab.freedesktop.org/libinput/snegg"
 ]
 
 build-backend = "setuptools.build_meta"
