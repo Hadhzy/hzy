@@ -2,7 +2,6 @@ setuptools
 wheel
 black
 pytest
-cibuildwheel
 pylint
 mypy
 pre-commit
