@@ -6,7 +6,7 @@
 ![OS Linux](https://img.shields.io/badge/OS-Linux-blue)
 
 ---
-This project is part of the [slodon](https://slodon.io/) ecosystem. It is a python API for the [`libei`](https://gitlab.freedesktop.org/libinput/libei) c library, which allows you to create emulated input.
+This project is part of the [slodon](https://slodon.io/) ecosystem. `hzy` is a Python API for the [`libei`](https://gitlab.freedesktop.org/libinput/libei) c library, which allows you to create emulated input.
 The project is being developed by the [Hadhzy](https://discord.gg/Qt89JBB2ES) team.
 
 ## Installation
