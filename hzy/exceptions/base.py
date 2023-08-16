@@ -1,5 +1,5 @@
 
-__all__ = ['Base', 'HzyDeletedProxy']
+__all__ = ['Base', 'HzyDeletedProxy', 'HzyProxyTooOld', 'HzyNullException']
 
 
 class Base(Exception):
@@ -9,3 +9,10 @@ class Base(Exception):
 class HzyDeletedProxy(Base):
     pass
 
+
+class HzyProxyTooOld(Base):
+    pass
+
+
+class HzyNullException(Base):
+    pass
