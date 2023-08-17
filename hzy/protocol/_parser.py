@@ -8,12 +8,11 @@ from hzy.exceptions.base import *  # pylint: disable=wildcard-import
 import xml.etree.ElementTree as ET
 import uuid
 import struct
-from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
-import os
+from typing import Union, Any
+from pathlib import Path
 
-if TYPE_CHECKING:
-    from xml.etree.ElementTree import Element
+from xml.etree.ElementTree import Element
 
 __all__ = ["run", "Protocol"]
 
@@ -22,12 +21,6 @@ class Debug:
     """
     A debug class for the protocol parser.
     """
-
-
-def _make_arg(parent, tag):
-    t = tag.get("type")  # the type of the arg # pylint: disable=invalid-name
-    c = "Arg" + t.capitalize()  # find the good class # pylint: disable=invalid-name
-    return globals()[c](parent, tag)  # -> Arg_TypeHere(parent, tag)
 
 
 class BasicXmlTag(ABC):
@@ -139,321 +132,6 @@ class Event(BasicXmlTag):
         return f"<{self.__class__.__name__}>"
 
 
-class Enum(BasicXmlTag):  # pylint: disable=too-many-instance-attributes
-    """
-    Represents a xml enum tag in the protocol file.
-
-    ### Arguments:
-        - interface("Interface"): The interface this enum belongs to.
-        - enum("Element"): The enum
-
-    ### Returns:
-        - None
-    """
-
-    def __init__(self, interface: "Interface", enum: "Element") -> None:
-        super().__init__()
-
-        self.interface: Interface = interface  # the interface this enum belongs to
-        assert enum.tag == "enum"
-
-        self.name: str | None = enum.get("name")  # the name of the enum
-        self.since: int = int(enum.get("since", 1))  # the version of the enum
-        self.entries: dict[str, Entry] = {}  # the entries of the enum
-        self.description: Description | None = None  # the description of the enum
-        self.summary: str | None = None  # the summary of the enum
-
-        self._values: dict[str, int] = {}  # get entry by name
-        self._names: dict[int, str] = {}  # get entry by value
-
-        self._loop(enum)
-
-    def _loop(self, enum):  # pylint: disable=arguments-renamed
-        for c in enum:  # pylint: disable=invalid-name
-            if c.tag == "description":
-                self.description = Description(c)  # create the description object
-                self.summary = self.description.summary  # set the summary
-
-            elif c.tag == "entry":
-                e = Entry(self, c)  # create the entry object # pylint: disable=invalid-name
-                self.entries[e.name] = e
-                self._values[e.name] = e.value
-                self._names[e.value] = e.name
-
-    def __getitem__(self, i):
-        if isinstance(i, int):
-            return self._names[i]
-
-        return self._values[i]
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
-
-class Arg(BasicXmlTag):
-    """
-    Represents a xml arg tag in the protocol file.
-    """
-
-    def __init__(self, parent, arg):
-        super().__init__()
-
-        self.parent = parent  # the parent request
-        self.name = arg.get("name")  # the name of the arg
-        self.type = arg.get("type")  # the type of the arg
-
-        self.description = None
-        self.summary = arg.get("summary", None)
-        self.allow_null = arg.get("allow-null", "false") == "true"
-
-        self._loop(arg)
-
-    def _loop(self, arg):  # pylint: disable=arguments-renamed
-        for c in arg:  # pylint: disable=invalid-name
-            if c.tag == "description":
-                self.description = Description(c)
-                self.summary = self.description.summary
-
-    def marshal(self, args):
-        """
-        Marshal the argument.
-
-        Implement this when marshalling for requests and events is the
-        same operation.
-
-        args is the list of arguments still to marshal; this call
-        removes the appropriate number of items from args.
-
-        The return value is a tuple of (bytes, optional return value,
-        list of fds to send).
-        """
-
-        raise NotImplementedError
-
-    def unmarshal(self, argdata, fd_source):
-        """Unmarshal the argument.
-
-        Implement this when unmarshalling from requests and events is
-        the same operation.
-
-        argdata is a file-like object providing access to the
-        remaining marshalled arguments; this call will consume the
-        appropriate number of bytes from this source
-
-        fd_source is an iterator object supplying fds that have been
-        received over the connection
-
-        The return value is the value of the argument.
-        """
-
-        raise NotImplementedError
-
-    def marshal_for_request(self, args, proxy):
-        """Marshal the argument
-
-        args is the list of arguments still to marshal; this call
-        removes the appropriate number of items from args
-
-        proxy is the interface proxy class instance being used for the
-        call.
-
-        The return value is a tuple of (bytes, optional return value,
-        list of fds to send)
-        """
-
-        return self.marshal(args)
-
-    def unmarshal_for_request(self, argdata, fd_source, proxy):
-        """Unmarshal the argument.
-
-        argdata is a file-like object providing access to the
-        remaining marshalled arguments; this call will consume the
-        appropriate number of bytes from this source
-
-        fd_source is an iterator object supplying fds that have been
-        received over the connection
-
-        proxy is the interface proxy class instance being used for the
-        call.
-
-        The return value is the value of the argument.
-        """
-
-        return self.unmarshal(argdata, fd_source)
-
-    def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}>"
-
-    def __str__(self) -> str:
-        return self.__repr__()
-
-
-class ArgInt(Arg):
-    """Signed 32-bit integer argument"""
-
-    def marshal(self, args):
-        v = args.pop(0)
-        return struct.pack("i", v), None, []
-
-    def unmarshal(self, argdata, fd_source):
-        (v,) = struct.unpack("i", argdata.read(4))
-        return v
-
-
-class ArgUint(Arg):
-    """Unsigned 32-bit integer argument"""
-
-    def marshal(self, args):
-        v = args.pop(0)
-        return struct.pack("I", v), None, []
-
-    def unmarshal(self, argdata, fd_source):
-        (v,) = struct.unpack("I", argdata.read(4))
-        return v
-
-
-class ArgNewId(Arg):
-    """Newly created object argument"""
-
-    def __init__(self, parent, arg):
-        super(ArgNewId, self).__init__(parent, arg)
-        self.interface = arg.get("interface", None)
-        if isinstance(parent, Event):
-            assert self.interface
-
-    def marshal_for_request(self, args, proxy):
-        nid = proxy.display._get_new_oid()
-        if self.interface:
-            # The interface type is part of the argument, and the
-            # version of the newly created object is the same as the
-            # version of the proxy.
-            npc = self.parent.interface.protocol[self.interface].client_proxy_class
-            version = proxy.version
-            b = struct.pack("I", nid)
-        else:
-            # The interface and version are supplied by the caller,
-            # and the argument is marshalled as string,uint32,uint32
-            interface = args.pop(0)
-            version = args.pop(0)
-            npc = interface.client_proxy_class
-            iname = interface.name.encode("utf-8")
-            parts = (
-                struct.pack("I", len(iname) + 1),
-                iname,
-                b"\x00" * (4 - (len(iname) % 4)),
-                struct.pack("II", version, nid),
-            )
-            b = b"".join(parts)
-        new_proxy = npc(proxy.display, nid, proxy.display._default_queue, version)
-        proxy.display.objects[nid] = new_proxy
-        return b, new_proxy, []
-
-    def unmarshal_from_event(self, argdata, fd_source, proxy):
-        assert self.interface
-        (nid,) = struct.unpack("I", argdata.read(4))
-        npc = self.parent.interface.protocol[self.interface].client_proxy_class
-        new_proxy = npc(proxy.display, nid, proxy.display._default_queue, proxy.version)
-        proxy.display.objects[nid] = new_proxy
-        return new_proxy
-
-
-class ArgString(Arg):
-    """String argument"""
-
-    def marshal(self, args):
-        estr = args.pop(0).encode("utf-8")
-        parts = (struct.pack("I", len(estr) + 1), estr, b"\x00" * (4 - (len(estr) % 4)))
-        return b"".join(parts), None, []
-
-    def unmarshal(self, argdata, fd_source):
-        # The length includes the terminating null byte
-        (l,) = struct.unpack("I", argdata.read(4))
-        assert l > 0
-        l = l - 1
-        s = argdata.read(l).decode("utf-8")
-        argdata.read(4 - (l % 4))
-        return s
-
-
-class ArgObject(Arg):
-    """Existing object argument"""
-
-    def marshal(self, args):
-        v = args.pop(0)
-        if v:
-            oid = v.oid
-        else:
-            if self.allow_null:
-                oid = 0
-            else:
-                raise HzyNullException("Null object not allowed")
-        return struct.pack("I", oid), None, []
-
-    def unmarshal_from_event(self, argdata, fd_source, proxy):
-        (v,) = struct.unpack("I", argdata.read(4))
-        return proxy.display.objects.get(v, None)
-
-
-class ArgFd(Arg):
-    """File descriptor argument"""
-
-    def marshal(self, args):
-        v = args.pop(0)
-        fd = os.dup(v)
-        return b"", None, [fd]
-
-    def unmarshal(self, argdata, fd_source):
-        return fd_source.pop(0)
-
-
-class ArgFixed(Arg):
-    """Signed 24.8 decimal number argument"""
-
-    # particular, is it (as the protocol description says) a sign bit
-    # followed by 23 bits of integer precision and 8 bits of decimal
-    # precision, or is it 24 bits of 2's complement integer precision
-    # followed by 8 bits of decimal precision?  I've assumed the
-    # latter because it seems to work!
-
-    def marshal(self, args):
-        v = args.pop(0)
-        if isinstance(v, int):
-            m = v << 8
-        else:
-            m = (int(v) << 8) + int((v % 1.0) * 256)
-        return struct.pack("i", m), None, []
-
-    def unmarshal(self, argdata, fd_source):
-        b = argdata.read(4)
-        (m,) = struct.unpack("i", b)
-        return float(m >> 8) + ((m & 0xFF) / 256.0)
-
-
-class ArgArray(Arg):
-    """Array argument"""
-
-    # This appears to be very similar to a string, except without any
-    # zero termination.  Interpretation of the contents of the array
-    # is request- or event-dependent.
-
-    def marshal(self, args):
-        v = args.pop(0)
-        # v should be bytes
-        parts = (struct.pack("I", len(v)), v, b"\x00" * (3 - ((len(v) - 1) % 4)))
-        return b"".join(parts), None, []
-
-    def unmarshal(self, argdata, fd_source):
-        (l,) = struct.unpack("I", argdata.read(4))
-        v = argdata.read(l)
-        pad = 3 - ((l - 1) % 4)
-        if pad:
-            argdata.read(pad)
-        return v
-
-
 class Request(BasicXmlTag):
     """
     Represent a xml request tag, and a request on an interface.
@@ -550,18 +228,301 @@ class Request(BasicXmlTag):
         return self.__repr__()
 
 
+class Enum(BasicXmlTag):  # pylint: disable=too-many-instance-attributes
+    """
+    Represents a xml enum tag in the protocol file.
+
+    ### Arguments:
+        - interface("Interface"): The interface this enum belongs to.
+        - enum("Element"): The enum
+
+    ### Returns:
+        - None
+    """
+
+    def __init__(self, interface: "Interface", enum: "Element") -> None:
+        super().__init__()
+
+        self.interface: Interface = interface  # the interface this enum belongs to
+        assert enum.tag == "enum"
+
+        self.name: str | None = enum.get("name")  # the name of the enum
+        self.since: int = int(enum.get("since", 1))  # the version of the enum
+        self.entries: dict[str, Entry] = {}  # the entries of the enum
+        self.description: Description | None = None  # the description of the enum
+        self.summary: str | None = None  # the summary of the enum
+
+        self._values: dict[str, int] = {}  # get entry by name
+        self._names: dict[int, str] = {}  # get entry by value
+
+        self._loop(enum)
+
+    def _loop(self, enum):  # pylint: disable=arguments-renamed
+        for c in enum:  # pylint: disable=invalid-name
+            if c.tag == "description":
+                self.description = Description(c)  # create the description object
+                self.summary = self.description.summary  # set the summary
+
+            elif c.tag == "entry":
+                e = Entry(
+                    self, c
+                )  # create the entry object # pylint: disable=invalid-name
+                self.entries[e.name] = e
+                self._values[e.name] = e.value
+                self._names[e.value] = e.name
+
+    def __getitem__(self, i):
+        if isinstance(i, int):
+            return self._names[i]
+
+        return self._values[i]
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+
+class ClientProxy:
+    """ """
+    def test1(self):
+        pass
+
+
+class Arg(BasicXmlTag):
+    """
+    Represents a xml arg tag in the protocol file.
+
+    ### Arguments:
+        - parent("Element" | "Request"): The parent of the arg.
+
+    ### Returns:
+        - None
+
+    """
+
+    def __init__(self, parent: Element | Request, arg: Element) -> None:
+        super().__init__()
+
+        self.parent = parent  # the parent request
+        self.name = arg.get("name")  # the name of the arg
+        self.type = arg.get("type")  # the type of the arg
+
+        self.description = None
+        self.summary = arg.get("summary", None)
+        self.allow_null = arg.get("allow-null", "false") == "true"
+
+        self._loop(arg)
+
+    def _loop(self, arg: Element):  # pylint: disable=arguments-renamed
+        for c in arg:  # pylint: disable=invalid-name
+            if c.tag == "description":
+                self.description = Description(c)
+                self.summary = self.description.summary
+
+    def marshal(self, args):
+        """
+        Marshal the argument.
+
+        Implement this when marshalling for requests and events is the
+        same operation.
+
+        args is the list of arguments still to marshal; this call
+        removes the appropriate number of items from args.
+
+        The return value is a tuple of (bytes, optional return value,
+        list of fds to send).
+
+        (This method needs to be implemented in the arg subclasses.)
+        """
+
+        raise NotImplementedError
+
+    def unmarshal(self, argdata, fd_source):
+        """Unmarshal the argument.
+
+        Implement this when unmarshalling from requests and events is
+        the same operation.
+
+        argdata is a file-like object providing access to the
+        remaining marshalled arguments; this call will consume the
+        appropriate number of bytes from this source
+
+        fd_source is an iterator object supplying fds that have been
+        received over the connection
+
+        The return value is the value of the argument.
+
+        (This method needs to be implemented in the arg subclasses.)
+        """
+
+        raise NotImplementedError
+
+    def marshal_for_request(self, args, proxy: ClientProxy):
+        """Marshal the argument
+
+        args is the list of arguments still to marshal; this call
+        removes the appropriate number of items from args
+
+        proxy is the interface proxy class instance being used for the
+        call.
+
+        The return value is a tuple of (bytes, optional return value,
+        list of fds to send)
+        """
+
+        return self.marshal(args)
+
+    def unmarshal_for_request(self, argdata, fd_source, proxy: ClientProxy):
+        """Unmarshal the argument.
+
+        argdata is a file-like object providing access to the
+        remaining marshalled arguments; this call will consume the
+        appropriate number of bytes from this source
+
+        fd_source is an iterator object supplying fds that have been
+        received over the connection
+
+        proxy is the interface proxy class instance being used for the
+        call.
+
+        The return value is the value of the argument.
+        """
+
+        return self.unmarshal(argdata, fd_source)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}>"
+
+    def __str__(self) -> str:
+        return self.__repr__()
+
+
+class ArgInt32(Arg):
+    """Signed 32-bit integer argument"""
+
+    def marshal(self, args) -> tuple[bytes, None, list]:
+        v = args.pop(0)
+        return struct.pack("i", v), None, []
+
+    def unmarshal(self, argdata, fd_source) -> Any:
+        (v,) = struct.unpack("i", argdata.read(4))
+        return v
+
+
+class ArgUint32(Arg):
+    """Unsigned 32-bit integer argument"""
+
+    def marshal(self, args) -> tuple[bytes, None, list]:
+        v = args.pop(0)
+        return struct.pack("I", v), None, []
+
+    def unmarshal(self, argdata, fd_source) -> Any:
+        (v,) = struct.unpack("I", argdata.read(4))
+        return v
+
+
+class ArgNewId(Arg):
+    """Newly created object argument"""
+
+    def __init__(self, parent, arg):
+        super(ArgNewId, self).__init__(parent, arg)
+        self.interface = arg.get("interface", None)
+
+        # if isinstance(parent, Event):
+        #     assert self.interface
+
+    def marshal_for_request(self, args, proxy):
+        nid = proxy.display._get_new_oid()
+        if self.interface:
+            # The interface type is part of the argument, and the
+            # version of the newly created object is the same as the
+            # version of the proxy.
+            #npc = self.parent.interface.protocol[self.interface].client_proxy_class
+            version = proxy.version
+            b = struct.pack("I", nid)
+        else:
+            # The interface and version are supplied by the caller,
+            # and the argument is marshalled as string,uint32,uint32
+            interface = args.pop(0)
+            version = args.pop(0)
+            npc = interface.client_proxy_class
+            iname = interface.name.encode("utf-8")
+            parts = (
+                struct.pack("I", len(iname) + 1),
+                iname,
+                b"\x00" * (4 - (len(iname) % 4)),
+                struct.pack("II", version, nid),
+            )
+            b = b"".join(parts)
+        # new_proxy = npc(proxy.display, nid, proxy.display._default_queue, version)
+        # proxy.display.objects[nid] = new_proxy
+        # return b, new_proxy, []
+
+    def unmarshal_from_event(self, argdata, fd_source, proxy):
+        assert self.interface
+        (nid,) = struct.unpack("I", argdata.read(4))
+        # npc = self.parent.interface.protocol[self.interface].client_proxy_class
+        # new_proxy = npc(proxy.display, nid, proxy.display._default_queue, proxy.version)
+        # proxy.display.objects[nid] = new_proxy
+        # return new_proxy
+
+
+class ArgString(Arg):
+    """String argument"""
+
+    def marshal(self, args) -> tuple[bytes, None, list]:
+        estr = args.pop(0).encode("utf-8")
+        parts = (struct.pack("I", len(estr) + 1), estr, b"\x00" * (4 - (len(estr) % 4)))
+        return b"".join(parts), None, []
+
+    def unmarshal(self, argdata, fd_source) -> Any:
+        # The length includes the terminating null byte
+        (l,) = struct.unpack("I", argdata.read(4))
+        assert l > 0
+        l = l - 1
+        s = argdata.read(l).decode("utf-8")
+        argdata.read(4 - (l % 4))
+        return s
+
+
+class ArgUint64(Arg):
+    """ """
+    def marshal(self, args):
+        pass
+
+    def unmarshal(self, argdata, fd_source):
+        pass
+
+
+class ArgFloat(Arg):
+    """ """
+    def marshal(self, args):
+        pass
+
+    def unmarshal(self, argdata, fd_source):
+        pass
+
+
+class ArgFd(Arg):
+    """ """
+    def marshal(self, args):
+        pass
+
+    def unmarshal(self, argdata, fd_source):
+        pass
+
+
 class Description(BasicXmlTag):
     """
     Represents a description tag in the protocol system.
     """
 
-    def __init__(self, interface) -> None:
+    def __init__(self, description: Element) -> None:
         super().__init__()
-
-        self.description = interface.get("description")  # the description
-        self.summary: str = self.description.attrib[
-            "summary"
-        ]  # summary from the description
+        self.description = description.text  # the description
+        self.summary: str = description.get('summary')  # summary from the description
 
     def __repr__(self) -> str:
         return f"<Description summary={self.summary} id={self.id}>"
@@ -600,13 +561,40 @@ class Interface(BasicXmlTag):
         self.version: int = int(interface.get("version"))  # interface version
 
         self.description: Description | None = None  # description of the interface
-        self.summary: str | None = None
-        self.requests: list[Request] | dict = {}
+        self.summary: str | None = None  # summary of the interface
+        self.requests: list[Request] | dict = {}  # requests of the interface
         self.events_by_name: dict[str, Event] = {}  # get event by name
         self.events_by_number: list[Event] = []  # get event by number
         self.enums: dict[str, Enum] = {}
 
         self._loop(interface)  # start searching for tags
+
+        # create proxy class
+        self.client_proxy_class = self._create_proxy_class()
+
+    def _create_proxy_class(self) -> type:
+        """
+        Create a proxy class dynamically and fill up the attributes
+
+        ### Arguments:
+
+        ### Returns:
+            - type: The created proxy class
+        """
+
+        d: dict[str] = {
+            "__doc__": self.description,
+            'interface': self,
+        }  # add attributes to client_proxy_class dynamically
+
+        # fill up d with requests, {r.name: method_to_invoke}
+        for r in self.requests.values():  # looping through request instances
+            d[r.name] = Interface.client_proxy_request(r)  # call static method
+
+        # class_name, base_class, attributes NOTE: The comma is needed to keep the class inside the tuple
+        _proxy_class = type(self.name + '_client_proxy', (ClientProxy,), d)
+
+        return _proxy_class
 
     def _loop(self, interface):
         for c in interface:
@@ -616,7 +604,7 @@ class Interface(BasicXmlTag):
 
             elif c.tag == "request":
                 e = Request(self, len(self.requests), c)  # interface, opcode, request
-                self.requests[e.name] = c
+                self.requests[e.name] = e
 
             elif c.tag == "event":
                 e = Event(self, c, len(self.events_by_number))
@@ -626,6 +614,20 @@ class Interface(BasicXmlTag):
             elif c.tag == "enum":
                 e = Enum(self, c)
                 self.enums[e.name] = e
+
+    @staticmethod
+    def client_proxy_request(x: Request):
+        """
+        A static method to call the request from the client proxy class.
+        This method is not invoking it directly, it is just returning a function that invokes it.
+
+        x.invoke() needs to be called with the proxy specified which is not happening at this point.
+        """
+
+        def call_request(*args):
+            return x.invoke(*args)
+
+        return call_request
 
     def __repr__(self) -> str:
         return f"<Interface name={self.name} version={self.version} description=<{Description}> > "
@@ -648,7 +650,7 @@ class Protocol:
     """
 
     VERSION = "1.0"  # hzy protocol version
-    INTERFACES: list[Interface] = []  # strores all the interfaces
+    INTERFACES: dict[str, Interface] = {}  # strores all the interfaces
 
     class Meta:
         """
@@ -695,7 +697,8 @@ class Protocol:
 
         for child in root:
             if child.tag == "interface":
-                self.INTERFACES.append(Interface(child))
+                _interface = Interface(child)
+                self.INTERFACES[_interface.name] = _interface
 
     def __str__(self) -> str:
         return self.__repr__()
@@ -705,6 +708,39 @@ class Protocol:
             f"<Hzy version={self.VERSION}> <Meta version={self.meta.version} name={self.meta.name} "
             f"copy_right={self.meta.copy_right}>"
         )
+
+    def __getitem__(self, item: str):
+        # return the interface -> protocol['interface_name']
+        return self.INTERFACES[item]
+
+
+def _make_arg(
+    parent: Request | Event, tag: Element
+) -> Union[Arg, ArgNewId, ArgUint32, ArgUint64, ArgFloat, ArgString, ArgInt32]:
+    """
+    Make an arg object from a xml tag.
+
+    ### Arguments:
+        - parent("Event" | "Method"): The parent of the arg.
+        - tag: The parsed xml tag-
+
+    ### Returns:
+        - Arg class
+    """
+    second = None
+    t = tag.get("type")  # the type of the arg # pylint: disable=invalid-name
+    t = t.split("_")  # remove the _new_id from the type
+
+    try:
+        second = t[1]
+
+    except IndexError:
+        # if there is no second element
+        pass
+
+    second = second.capitalize() if second else ""
+    c = "Arg" + t[0].capitalize() + second  # find the good class # pylint: disable=invalid-name
+    return globals()[c](parent, tag)  # -> Arg_TypeHere(parent, tag)
 
 
 def run(protocol_file="protocol.xml", long_description=False) -> None | str:
@@ -718,6 +754,11 @@ def run(protocol_file="protocol.xml", long_description=False) -> None | str:
     ### Returns:
         -None | str
     """
+
+    _path = Path(protocol_file)
+
+    if not _path.exists():
+        raise FileNotFoundError(f"The protocol file {protocol_file} does not exist.")
 
     protocol = Protocol(protocol_file=protocol_file)
 
